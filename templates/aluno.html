@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ aluno|title }} — DevOps N2S</title>
+  <meta name="description" content="Progresso de {{ aluno|title }} nas tarefas de DevOps N2S" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner container">
+    <div class="logo">
+      <a href="/" class="logo-link">
+        <span class="logo-icon">⚙️</span>
+        <div>
+          <span class="logo-title">DevOps N2S</span>
+          <span class="logo-sub">Git Flow · Branches · Pull Requests</span>
+        </div>
+      </a>
+    </div>
+    <a href="/" class="btn-back">← Voltar ao Painel</a>
+  </div>
+</header>
+
+<!-- HERO DO ALUNO -->
+<section class="hero hero-small">
+  <div class="hero-bg"></div>
+  <div class="container hero-inner">
+    <div class="breadcrumb">
+      <a href="/">Painel</a> <span>/</span> <span>Aluno</span>
+    </div>
+    <div class="aluno-hero">
+      <div class="aluno-hero-avatar">{{ aluno[0] }}</div>
+      <div class="aluno-hero-info">
+        <h1 class="aluno-hero-name">{{ aluno|title }}</h1>
+        <p class="aluno-hero-sub">Turma DevOps N2S</p>
+      </div>
+      <div class="aluno-hero-ring">
+        <svg viewBox="0 0 100 100" class="ring-svg-lg">
+          <circle class="ring-bg" cx="50" cy="50" r="42"/>
+          <circle class="ring-fill" cx="50" cy="50" r="42"
+            stroke-dasharray="{{ (pct_aluno * 263.9 / 100)|round(2) }} 263.9"
+            id="aluno-ring-fill"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-pct" id="aluno-pct-display">{{ pct_aluno }}%</span>
+          <span class="ring-detail">{{ concluidas }}/{{ tarefas|length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container page-content">
+
+  <!-- Barra de progresso geral do aluno -->
+  <div class="aluno-progress-bar-wrap">
+    <div class="progress-bar progress-bar-xl">
+      <div class="progress-fill progress-animated" id="aluno-progress-bar" style="width: {{ pct_aluno }}%"></div>
+    </div>
+    <span class="progress-label-xl" id="aluno-progress-label">
+      {{ concluidas }} de {{ tarefas|length }} tarefas concluídas
+    </span>
+  </div>
+
+  <!-- Grid de tarefas do aluno -->
+  <div class="tasks-grid tasks-grid-aluno">
+    {% for tarefa in tarefas %}
+    {% set st = status_aluno.get(tarefa.id|string, 'pendente') %}
+    <div class="task-card-aluno dif-{{ tarefa.dificuldade|lower }} status-card-{{ st }}" id="task-block-{{ tarefa.id }}">
+
+      <div class="task-card-aluno-top">
+        <span class="task-icon">{{ tarefa.icone }}</span>
+        <div class="task-card-aluno-badges">
+          <span class="task-badge cat-{{ tarefa.categoria|replace(' ', '-')|lower }}">{{ tarefa.categoria }}</span>
+          <span class="tag tag-dif-{{ tarefa.dificuldade|lower }}">{{ tarefa.dificuldade }}</span>
+        </div>
+        <div class="status-indicator status-ind-{{ st }}" id="status-ind-{{ tarefa.id }}">
+          {% if st == 'concluida' %}✅
+          {% elif st == 'em_andamento' %}🔄
+          {% else %}⏳
+          {% endif %}
+        </div>
+      </div>
+
+      <h3 class="task-title">{{ tarefa.titulo }}</h3>
+      <p class="task-desc">{{ tarefa.descricao[:100] }}…</p>
+
+      <div class="task-card-aluno-footer">
+        <span class="tag tag-prazo">⏱ {{ tarefa.prazo }}</span>
+        <select class="status-select status-{{ st }}"
+                id="sel-{{ tarefa.id }}"
+                data-aluno="{{ aluno }}"
+                data-tarefa="{{ tarefa.id }}"
+                data-taskid="{{ tarefa.id }}"
+                onchange="atualizarStatus(this)">
+          <option value="pendente"     {% if st=='pendente'     %}selected{% endif %}>⏳ Pendente</option>
+          <option value="em_andamento" {% if st=='em_andamento' %}selected{% endif %}>🔄 Em andamento</option>
+          <option value="concluida"    {% if st=='concluida'    %}selected{% endif %}>✅ Concluída</option>
+        </select>
+      </div>
+
+      <a href="/tarefa/{{ tarefa.id }}" class="task-detail-link">Ver detalhes →</a>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <span>⚙️ DevOps N2S · {{ ano }}</span>
+    <span class="footer-sep">·</span>
+    <span>Git Flow & Boas Práticas</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const TOTAL_TAREFAS = {{ tarefas|length }};
+
+  async function atualizarStatus(sel) {
+    const aluno = sel.dataset.aluno;
+    const tarefa_id = sel.dataset.tarefa;
+    const taskId = sel.dataset.taskid;
+    const status = sel.value;
+
+    sel.className = `status-select status-${status}`;
+
+    // Atualiza indicador visual
+    const ind = document.getElementById(`status-ind-${taskId}`);
+    ind.className = `status-indicator status-ind-${status}`;
+    ind.textContent = status === 'concluida' ? '✅' : status === 'em_andamento' ? '🔄' : '⏳';
+
+    // Atualiza classe do card
+    const block = document.getElementById(`task-block-${taskId}`);
+    block.className = block.className.replace(/status-card-\S+/, `status-card-${status}`);
+
+    const res = await fetch('/api/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aluno, tarefa_id, status })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const pct = data.pct_aluno;
+      const c = data.aluno_concluidas;
+
+      document.getElementById('aluno-progress-bar').style.width = pct + '%';
+      document.getElementById('aluno-progress-label').textContent = `${c} de ${TOTAL_TAREFAS} tarefas concluídas`;
+      document.getElementById('aluno-pct-display').textContent = pct + '%';
+
+      // SVG ring
+      const maxDash = 263.9;
+      document.getElementById('aluno-ring-fill').setAttribute(
+        'stroke-dasharray', `${(pct * maxDash / 100).toFixed(2)} ${maxDash}`
+      );
+
+      showToast(status === 'concluida' ? '🎉 Tarefa concluída!' : status === 'em_andamento' ? '🔄 Em andamento' : '⏳ Pendente');
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Animação de entrada
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 70);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  document.querySelectorAll('.task-card-aluno').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

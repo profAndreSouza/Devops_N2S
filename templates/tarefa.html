@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ tarefa.titulo }} — DevOps N2S</title>
+  <meta name="description" content="{{ tarefa.descricao[:160] }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner container">
+    <div class="logo">
+      <a href="/" class="logo-link">
+        <span class="logo-icon">⚙️</span>
+        <div>
+          <span class="logo-title">DevOps N2S</span>
+          <span class="logo-sub">Git Flow · Branches · Pull Requests</span>
+        </div>
+      </a>
+    </div>
+    <a href="/" class="btn-back">← Voltar ao Painel</a>
+  </div>
+</header>
+
+<!-- HERO DA TAREFA -->
+<section class="hero hero-small">
+  <div class="hero-bg"></div>
+  <div class="container hero-inner">
+    <div class="breadcrumb">
+      <a href="/">Painel</a> <span>/</span> <span>Tarefa #{{ tarefa.id }}</span>
+    </div>
+    <div class="task-hero-header">
+      <span class="task-hero-icon">{{ tarefa.icone }}</span>
+      <div>
+        <div class="task-hero-meta">
+          <span class="task-badge cat-{{ tarefa.categoria|replace(' ', '-')|lower }}">{{ tarefa.categoria }}</span>
+          <span class="tag tag-dif-{{ tarefa.dificuldade|lower }}">{{ tarefa.dificuldade }}</span>
+          <span class="tag tag-prazo">⏱ {{ tarefa.prazo }}</span>
+        </div>
+        <h1 class="task-hero-title">{{ tarefa.titulo }}</h1>
+      </div>
+    </div>
+    <p class="task-hero-desc">{{ tarefa.descricao }}</p>
+  </div>
+</section>
+
+<div class="container page-content">
+  <div class="two-col">
+
+    <!-- COLUNA ESQUERDA: detalhes -->
+    <div class="col-details">
+
+      <!-- Passos -->
+      <div class="card">
+        <h2 class="card-title">📝 Passo a Passo</h2>
+        <ol class="steps-list">
+          {% for passo in tarefa.passos %}
+          <li class="step-item">
+            <span class="step-num">{{ loop.index }}</span>
+            <span>{{ passo }}</span>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+
+      <!-- Comandos -->
+      <div class="card">
+        <h2 class="card-title">💻 Comandos</h2>
+        <div class="code-block">
+          {% for cmd in tarefa.comandos %}
+          <div class="code-line">
+            <span class="code-prompt">$</span>
+            <code>{{ cmd }}</code>
+            <button class="copy-btn" onclick="copyCmd(this)" title="Copiar">⧉</button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA DIREITA: progresso dos alunos -->
+    <div class="col-students">
+      <div class="card card-sticky">
+        <h2 class="card-title">👥 Status por Aluno</h2>
+
+        {% set total_c = namespace(v=0) %}
+        {% for aluno in alunos %}
+          {% if progresso.get(aluno, {}).get(tarefa.id|string) == 'concluida' %}
+            {% set total_c.v = total_c.v + 1 %}
+          {% endif %}
+        {% endfor %}
+        {% set pct_t = (total_c.v / alunos|length * 100)|round|int %}
+
+        <div class="progress-summary">
+          <div class="progress-big-num">{{ total_c.v }}<span>/{{ alunos|length }}</span></div>
+          <div class="progress-bar progress-bar-lg">
+            <div class="progress-fill" id="tarefa-progress-bar" style="width: {{ pct_t }}%"></div>
+          </div>
+          <span class="progress-pct" id="tarefa-pct-label">{{ pct_t }}% concluída</span>
+        </div>
+
+        <ul class="alunos-status-list" id="alunos-status-list">
+          {% for aluno in alunos %}
+          {% set st = progresso.get(aluno, {}).get(tarefa.id|string, 'pendente') %}
+          <li class="aluno-status-item" id="item-{{ loop.index0 }}">
+            <div class="aluno-status-info">
+              <span class="aluno-avatar-sm">{{ aluno[0] }}</span>
+              <a href="/aluno/{{ aluno }}" class="aluno-status-name">{{ aluno|title }}</a>
+            </div>
+            <div class="status-controls">
+              <select class="status-select status-{{ st }}"
+                      data-aluno="{{ aluno }}"
+                      data-tarefa="{{ tarefa.id }}"
+                      onchange="atualizarStatus(this)">
+                <option value="pendente"     {% if st=='pendente'     %}selected{% endif %}>⏳ Pendente</option>
+                <option value="em_andamento" {% if st=='em_andamento' %}selected{% endif %}>🔄 Em andamento</option>
+                <option value="concluida"    {% if st=='concluida'    %}selected{% endif %}>✅ Concluída</option>
+              </select>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <span>⚙️ DevOps N2S · {{ ano }}</span>
+    <span class="footer-sep">·</span>
+    <span>Git Flow & Boas Práticas</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const TOTAL_ALUNOS = {{ alunos|length }};
+
+  async function atualizarStatus(sel) {
+    const aluno = sel.dataset.aluno;
+    const tarefa_id = sel.dataset.tarefa;
+    const status = sel.value;
+
+    // Atualiza visual imediatamente
+    sel.className = `status-select status-${status}`;
+
+    const res = await fetch('/api/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aluno, tarefa_id, status })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      // Atualiza barra de progresso
+      const pct = data.pct_aluno;
+      const concluidas = document.querySelectorAll('.status-select option[value="concluida"]:checked').length;
+
+      // Re-calcula contagem de concluídas para esta tarefa
+      let count = 0;
+      document.querySelectorAll('.status-select').forEach(s => {
+        if (s.value === 'concluida') count++;
+      });
+      const newPct = Math.round(count / TOTAL_ALUNOS * 100);
+      document.getElementById('tarefa-progress-bar').style.width = newPct + '%';
+      document.getElementById('tarefa-pct-label').textContent = newPct + '% concluída';
+
+      showToast(status === 'concluida' ? '✅ Tarefa concluída!' : status === 'em_andamento' ? '🔄 Em andamento' : '⏳ Pendente');
+    }
+  }
+
+  function copyCmd(btn) {
+    const code = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => showToast('📋 Copiado!'));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Animação de entrada
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 40);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  document.querySelectorAll('.card, .aluno-status-item').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

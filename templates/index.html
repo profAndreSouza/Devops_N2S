@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOps N2S — Painel de Tarefas</title>
+  <meta name="description" content="Painel de tarefas Git Flow e DevOps para a turma N2S" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ HEADER ══ -->
+<header class="header">
+  <div class="header-inner container">
+    <div class="logo">
+      <span class="logo-icon">⚙️</span>
+      <div>
+        <span class="logo-title">DevOps N2S</span>
+        <span class="logo-sub">Git Flow · Branches · Pull Requests</span>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <a href="/" class="nav-link active">Painel</a>
+      <span class="nav-divider"></span>
+      <span class="nav-badge">{{ total_alunos }} alunos · {{ total_tarefas }} tarefas</span>
+    </nav>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════ HERO ══ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-inner">
+    <h1 class="hero-title">Painel de <span class="gradient-text">Tarefas</span></h1>
+    <p class="hero-sub">Acompanhe o progresso da turma em Git Flow, branches e boas práticas de DevOps.</p>
+
+    <!-- Stats Cards -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <span class="stat-number">{{ total_alunos }}</span>
+        <span class="stat-label">Alunos</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ total_tarefas }}</span>
+        <span class="stat-label">Tarefas</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" id="stat-concluidas">{{ total_concluidas }}</span>
+        <span class="stat-label">Concluídas</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-number" id="stat-pct">{{ pct_geral }}%</span>
+        <span class="stat-label">Progresso Geral</span>
+        <div class="stat-bar">
+          <div class="stat-bar-fill" style="width: {{ pct_geral }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ TAREFAS ══ -->
+<section class="section container">
+  <div class="section-header">
+    <h2 class="section-title">📋 Tarefas da Turma</h2>
+    <p class="section-desc">Clique em uma tarefa para ver os detalhes e o progresso por aluno.</p>
+  </div>
+
+  <div class="tasks-grid">
+    {% for tarefa in tarefas %}
+    {% set total_c = namespace(v=0) %}
+    {% for aluno in alunos %}
+      {% if progresso.get(aluno, {}).get(tarefa.id|string) == 'concluida' %}
+        {% set total_c.v = total_c.v + 1 %}
+      {% endif %}
+    {% endfor %}
+    {% set pct_t = (total_c.v / alunos|length * 100)|round|int %}
+
+    <a href="/tarefa/{{ tarefa.id }}" class="task-card dif-{{ tarefa.dificuldade|lower }}">
+      <div class="task-card-top">
+        <span class="task-icon">{{ tarefa.icone }}</span>
+        <span class="task-badge cat-{{ tarefa.categoria|replace(' ', '-')|lower }}">{{ tarefa.categoria }}</span>
+      </div>
+      <h3 class="task-title">{{ tarefa.titulo }}</h3>
+      <p class="task-desc">{{ tarefa.descricao[:110] }}…</p>
+      <div class="task-meta">
+        <span class="tag tag-dif-{{ tarefa.dificuldade|lower }}">{{ tarefa.dificuldade }}</span>
+        <span class="tag tag-prazo">⏱ {{ tarefa.prazo }}</span>
+      </div>
+      <div class="task-progress">
+        <div class="task-progress-header">
+          <span>Concluídas</span>
+          <span>{{ total_c.v }}/{{ alunos|length }}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ pct_t }}%"></div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ ALUNOS ══ -->
+<section class="section container">
+  <div class="section-header">
+    <h2 class="section-title">👥 Alunos</h2>
+    <p class="section-desc">Clique em um aluno para ver seu progresso individual.</p>
+  </div>
+
+  <!-- Filtro rápido -->
+  <div class="filter-bar">
+    <input type="text" id="search-aluno" class="search-input" placeholder="🔍 Buscar aluno..." />
+    <button class="filter-btn active" data-filter="todos" onclick="filtrarAlunos('todos',this)">Todos</button>
+    <button class="filter-btn" data-filter="concluiu" onclick="filtrarAlunos('concluiu',this)">Com progresso</button>
+  </div>
+
+  <div class="students-grid" id="students-grid">
+    {% for aluno in alunos %}
+    {% set c = namespace(v=0) %}
+    {% for tid in progresso.get(aluno, {}).values() %}
+      {% if tid == 'concluida' %}{% set c.v = c.v + 1 %}{% endif %}
+    {% endfor %}
+    {% set pct_a = (c.v / tarefas|length * 100)|round|int %}
+
+    <a href="/aluno/{{ aluno }}" class="student-card" data-nome="{{ aluno }}" data-pct="{{ pct_a }}">
+      <div class="student-avatar">{{ aluno[0] }}</div>
+      <div class="student-info">
+        <span class="student-name">{{ aluno|title }}</span>
+        <span class="student-prog">{{ c.v }}/{{ tarefas|length }} tarefas</span>
+      </div>
+      <div class="student-ring" style="--pct: {{ pct_a }}">
+        <svg viewBox="0 0 36 36" class="ring-svg">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill" cx="18" cy="18" r="15"
+            stroke-dasharray="{{ (pct_a * 94.25 / 100)|round(2) }} 94.25"/>
+        </svg>
+        <span class="ring-label">{{ pct_a }}%</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ FOOTER ══ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <span>⚙️ DevOps N2S · {{ ano }}</span>
+    <span class="footer-sep">·</span>
+    <span>Git Flow & Boas Práticas</span>
+  </div>
+</footer>
+
+<script>
+  // Busca de alunos
+  document.getElementById('search-aluno').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.student-card').forEach(c => {
+      c.style.display = c.dataset.nome.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+
+  function filtrarAlunos(filtro, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.student-card').forEach(c => {
+      if (filtro === 'todos') { c.style.display = ''; return; }
+      if (filtro === 'concluiu') { c.style.display = parseInt(c.dataset.pct) > 0 ? '' : 'none'; }
+    });
+  }
+
+  // Animação de entrada nos cards
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 60);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.task-card, .student-card, .stat-card').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
