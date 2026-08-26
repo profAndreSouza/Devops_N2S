@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="description" content="Campo Minado — um clássico reimaginado com visual moderno." />
+<meta name="theme-color" content="#0d1117" />
+<title>Campo Minado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>" />
+</head>
+<body>
+  <div class="aurora" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <main class="shell">
+    <header class="topbar">
+      <h1 class="logo"><span class="logo-icon">💣</span> Campo<span class="logo-accent">Minado</span></h1>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btn-sound" title="Ligar/desligar som (S)" aria-pressed="true">
+          <span class="i-on">🔊</span><span class="i-off">🔇</span>
+        </button>
+        <button class="icon-btn" id="btn-help" title="Como jogar (H)">❓</button>
+        <button class="icon-btn" id="btn-theme" title="Alternar tema (T)">
+          <span class="i-on">🌙</span><span class="i-off">☀️</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="levels" id="levels" role="tablist" aria-label="Dificuldade">
+      <button class="level" data-level="facil" role="tab">Fácil<small>9×9 · 10 💣</small></button>
+      <button class="level" data-level="medio" role="tab">Médio<small>16×16 · 40 💣</small></button>
+      <button class="level" data-level="dificil" role="tab">Difícil<small>16×30 · 99 💣</small></button>
+      <button class="level" data-level="custom" role="tab">Custom<small id="custom-sub">— · —</small></button>
+    </nav>
+
+    <form class="custom-panel" id="custom-panel" hidden>
+      <label>Linhas <input type="number" id="in-rows" min="5" max="30" value="12" /></label>
+      <label>Colunas <input type="number" id="in-cols" min="5" max="40" value="18" /></label>
+      <label>Minas <input type="number" id="in-mines" min="1" max="800" value="35" /></label>
+      <button class="btn-primary" type="submit">Aplicar</button>
+    </form>
+
+    <section class="panel">
+      <div class="hud">
+        <div class="counter" title="Minas restantes">
+          <span class="counter-icon">💣</span>
+          <span class="digits" id="mine-count">010</span>
+        </div>
+
+        <button class="face" id="btn-reset" title="Novo jogo (R)" aria-label="Novo jogo">
+          <span class="face-emoji" id="face">🙂</span>
+        </button>
+
+        <div class="counter" title="Tempo">
+          <span class="counter-icon">⏱️</span>
+          <span class="digits" id="timer">000</span>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" role="grid" aria-label="Campo minado"></div>
+
+        <div class="overlay" id="overlay" hidden>
+          <div class="overlay-card">
+            <div class="overlay-emoji" id="ov-emoji">🏆</div>
+            <h2 id="ov-title">Você venceu!</h2>
+            <p id="ov-text">Tempo: 42s</p>
+            <p class="overlay-record" id="ov-record" hidden>🎉 Novo recorde!</p>
+            <div class="overlay-actions">
+              <button class="btn-primary" id="ov-again">Jogar de novo</button>
+              <button class="btn-ghost" id="ov-close">Ver o campo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="flag-toggle" id="btn-flag" aria-pressed="false" title="Modo bandeira (F ou botão direito)">
+          <span class="ft-icon">🚩</span>
+          <span class="ft-label">Modo bandeira</span>
+          <span class="ft-state">OFF</span>
+        </button>
+        <div class="stat" id="stat-flags">🚩 0 / 10</div>
+        <div class="stat" id="stat-progress">Revelado 0%</div>
+      </div>
+    </section>
+
+    <section class="records">
+      <h3>🏅 Melhores tempos</h3>
+      <ul id="records-list">
+        <li><span>Fácil</span><b>—</b></li>
+        <li><span>Médio</span><b>—</b></li>
+        <li><span>Difícil</span><b>—</b></li>
+      </ul>
+      <button class="btn-ghost tiny" id="btn-clear-records">Limpar recordes</button>
+    </section>
+
+    <footer class="foot">
+      Clique para revelar · Botão direito para marcar · Clique num número para abrir os vizinhos
+    </footer>
+  </main>
+
+  <div class="modal" id="help" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="help-close" aria-label="Fechar">✕</button>
+      <h2>Como jogar</h2>
+      <ul class="rules">
+        <li><b>Objetivo:</b> revelar todas as casas que não contêm minas.</li>
+        <li><b>Números:</b> indicam quantas minas existem nas 8 casas vizinhas.</li>
+        <li><b>Bandeira:</b> botão direito (ou toque longo no celular) marca uma mina suspeita.</li>
+        <li><b>Abertura rápida:</b> clique num número já revelado com a quantidade certa de bandeiras ao redor para abrir todos os vizinhos restantes.</li>
+        <li><b>Primeiro clique</b> é sempre seguro — e sempre abre uma área.</li>
+      </ul>
+      <h3>Atalhos</h3>
+      <div class="keys">
+        <kbd>R</kbd> novo jogo <kbd>F</kbd> modo bandeira <kbd>S</kbd> som
+        <kbd>T</kbd> tema <kbd>H</kbd> ajuda <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> dificuldade
+        <kbd>↑↓←→</kbd> mover <kbd>Espaço</kbd> revelar <kbd>Shift</kbd>+<kbd>Espaço</kbd> bandeira
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
