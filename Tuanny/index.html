@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TechBlog</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- CABEÇALHO -->
+    <header>
+        <div class="logo">
+            <span>Tech</span>Blog
+        </div>
+
+        <nav id="menu">
+            <a href="#inicio">Início</a>
+            <a href="#artigos">Artigos</a>
+            <a href="#sobre">Sobre</a>
+            <a href="#contato">Contato</a>
+        </nav>
+
+        <button class="menu-btn" onclick="abrirMenu()">☰</button>
+    </header>
+
+
+    <!-- BANNER PRINCIPAL -->
+    <section class="hero" id="inicio">
+
+        <div class="hero-content">
+            <span class="categoria">TECNOLOGIA</span>
+
+            <h1>
+                Tecnologia que transforma
+                o nosso futuro
+            </h1>
+
+            <p>
+                Conteúdos, novidades e dicas sobre programação,
+                tecnologia e desenvolvimento.
+            </p>
+
+            <button onclick="scrollParaArtigos()">
+                Explorar artigos
+            </button>
+        </div>
+
+    </section>
+
+
+    <!-- ARTIGOS -->
+    <main>
+
+        <section class="artigos" id="artigos">
+
+            <div class="titulo-secao">
+                <span>CONTEÚDOS</span>
+                <h2>Artigos recentes</h2>
+                <p>
+                    Confira nossas últimas publicações.
+                </p>
+            </div>
+
+
+            <!-- FILTROS -->
+            <div class="filtros">
+                <button class="filtro ativo" onclick="filtrar('todos')">
+                    Todos
+                </button>
+
+                <button class="filtro" onclick="filtrar('programacao')">
+                    Programação
+                </button>
+
+                <button class="filtro" onclick="filtrar('web')">
+                    Desenvolvimento Web
+                </button>
+
+                <button class="filtro" onclick="filtrar('ia')">
+                    Inteligência Artificial
+                </button>
+            </div>
+
+
+            <!-- CARDS -->
+            <div class="cards">
+
+                <article class="card" data-categoria="programacao">
+
+                    <div class="card-img img1">
+                        <span>Programação</span>
+                    </div>
+
+                    <div class="card-content">
+
+                        <small>26 de agosto de 2026</small>
+
+                        <h3>
+                            Como começar a programar?
+                        </h3>
+
+                        <p>
+                            Descubra os primeiros passos para
+                            aprender programação e desenvolver
+                            seus próprios projetos.
+                        </p>
+
+                        <button onclick="lerArtigo('Como começar a programar?')">
+                            Ler artigo →
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <article class="card" data-categoria="web">
+
+                    <div class="card-img img2">
+                        <span>Web</span>
+                    </div>
+
+                    <div class="card-content">
+
+                        <small>24 de agosto de 2026</small>
+
+                        <h3>
+                            HTML, CSS e JavaScript
+                        </h3>
+
+                        <p>
+                            Entenda como essas três tecnologias
+                            trabalham juntas na criação de sites.
+                        </p>
+
+                        <button onclick="lerArtigo('HTML, CSS e JavaScript')">
+                            Ler artigo →
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <article class="card" data-categoria="ia">
+
+                    <div class="card-img img3">
+                        <span>IA</span>
+                    </div>
+
+                    <div class="card-content">
+
+                        <small>22 de agosto de 2026</small>
+
+                        <h3>
+                            O futuro da Inteligência Artificial
+                        </h3>
+
+                        <p>
+                            Conheça algumas das principais tendências
+                            que estão transformando a tecnologia.
+                        </p>
+
+                        <button onclick="lerArtigo('O futuro da Inteligência Artificial')">
+                            Ler artigo →
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <article class="card" data-categoria="programacao">
+
+                    <div class="card-img img4">
+                        <span>Programação</span>
+                    </div>
+
+                    <div class="card-content">
+
+                        <small>20 de agosto de 2026</small>
+
+                        <h3>
+                            Por que aprender Java?
+                        </h3>
+
+                        <p>
+                            Veja por que Java continua sendo uma
+                            linguagem importante no mercado.
+                        </p>
+
+                        <button onclick="lerArtigo('Por que aprender Java?')">
+                            Ler artigo →
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- SOBRE -->
+        <section class="sobre" id="sobre">
+
+            <div class="sobre-texto">
+
+                <span>SOBRE O BLOG</span>
+
+                <h2>
+                    Tecnologia de forma
+                    simples e acessível.
+                </h2>
+
+                <p>
+                    O TechBlog foi criado para compartilhar
+                    conhecimentos sobre programação,
+                    desenvolvimento web, inteligência artificial
+                    e as principais novidades do mundo da tecnologia.
+                </p>
+
+                <p>
+                    Nosso objetivo é transformar assuntos complexos
+                    em conteúdos simples e fáceis de entender.
+                </p>
+
+            </div>
+
+            <div class="sobre-box">
+                <strong>+100</strong>
+                <span>Conteúdos publicados</span>
+            </div>
+
+        </section>
+
+
+        <!-- CONTATO -->
+        <section class="contato" id="contato">
+
+            <div class="titulo-secao">
+                <span>FALE CONOSCO</span>
+
+                <h2>
+                    Entre em contato
+                </h2>
+
+                <p>
+                    Tem alguma sugestão? Envie uma mensagem.
+                </p>
+            </div>
+
+
+            <form id="formContato">
+
+                <input
+                    type="text"
+                    id="nome"
+                    placeholder="Seu nome"
+                    required
+                >
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Seu e-mail"
+                    required
+                >
+
+                <textarea
+                    id="mensagem"
+                    placeholder="Sua mensagem"
+                    rows="5"
+                    required
+                ></textarea>
+
+                <button type="submit">
+                    Enviar mensagem
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <!-- RODAPÉ -->
+    <footer>
+
+        <div class="logo">
+            <span>Tech</span>Blog
+        </div>
+
+        <p>
+            © 2026 TechBlog. Todos os direitos reservados.
+        </p>
+
+        <div class="redes">
+            <a href="#">Instagram</a>
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+        </div>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="script.js"></script>
+
+</body>
+</html>
